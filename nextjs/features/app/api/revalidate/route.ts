@@ -1,8 +1,16 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 
-/** Regenerates /isr and the posts on demand: `curl -X POST <site>/api/revalidate`. */
+/**
+ * "The organisers publish a change": drops the cached program and regenerates the schedule and
+ * the talk pages on their next request. `curl -X POST <site>/api/revalidate`. A real site would
+ * check a secret here; this demo lets anyone press the button.
+ */
 export function POST() {
-  revalidateTag("posts", "max");
-  revalidatePath("/isr");
-  return Response.json({ revalidated: ["/isr", "posts"] });
+  revalidateTag("program", "max");
+  revalidatePath("/schedule");
+  revalidatePath("/talks/[slug]", "page");
+  return Response.json({
+    revalidated: ["program", "/schedule", "/talks/[slug]"],
+    at: new Date().toISOString(),
+  });
 }

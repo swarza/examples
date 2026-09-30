@@ -6,6 +6,9 @@ import { S3Client } from "@aws-sdk/client-s3";
 
 let client: S3Client | null = null;
 
+/** Whether a bucket is bound. Pages check this at request time and explain how to bind one. */
+export const hasStorage = () => Boolean(process.env.STORAGE_ENDPOINT && process.env.STORAGE_BUCKET);
+
 export function storage() {
   client ??= new S3Client({
     endpoint: process.env.STORAGE_ENDPOINT,

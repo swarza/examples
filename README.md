@@ -8,12 +8,12 @@ README that walks through the setup.
 
 ## Examples
 
-| Example                                  | What it shows                                                                                        |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [starters/static](starters/static)       | A static site: redirects, response headers and a custom 404 in `swarza.json`                         |
-| [starters/fetch-api](starters/fetch-api) | A JSON API as a `fetch` handler in Node.js, environment variables and a scheduled job                |
-| [nextjs/features](nextjs/features)       | Next.js 16: SSR, ISR, streaming, Server Actions, images, middleware, a database and a Storage bucket |
-| [nextjs/news](nextjs/news)               | A news site with an admin: database, public bucket for images, scheduled publishing, previews        |
+| Example                                  | What it shows                                                                                                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [starters/static](starters/static)       | A static site: redirects, response headers and a custom 404 in `swarza.json`                                                                                                |
+| [starters/fetch-api](starters/fetch-api) | A café site from one `fetch` handler: HTML pages, a JSON API, a form, environment variables and a scheduled job                                                             |
+| [nextjs/features](nextjs/features)       | A conference site in Next.js 16: ISR schedule, talk pages, a live page with streaming, Server Actions, images, an attendee wall in a database and photo uploads to a bucket |
+| [nextjs/news](nextjs/news)               | A news site with an admin: database, public bucket for images, scheduled publishing, previews                                                                               |
 
 ## Use an example
 

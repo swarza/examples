@@ -1,23 +1,31 @@
 # Next.js on swarza
 
-A small app with the Next.js features most sites use, deployed with `@swarza/next`:
+A site for Hydrate 26, a one-day web conference that does not exist. Each page does a real job for
+the event and shows one Next.js feature on swarza, deployed with `@swarza/next`. The site's own
+[Under the hood](app/under-the-hood/page.tsx) page lists the same mapping and times the database and
+the bucket live.
 
-| Page                       | Feature                                                                                              |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `/`                        | Static page (prerendered at build)                                                                   |
-| `/ssr`                     | Server rendering per request, `headers()`, `cookies()`                                               |
-| `/isr`                     | ISR (`revalidate = 30`) and data cache tags                                                          |
-| `/blog/[slug]`             | `generateStaticParams`, new paths rendered on first request                                          |
-| `/streaming`               | Suspense streaming                                                                                   |
-| `/actions`                 | Server Actions with `revalidatePath`                                                                 |
-| `/image`                   | `next/image`                                                                                         |
-| `/api/hello`, `/api/edge`  | Route handlers (Node.js and edge)                                                                    |
-| `/api/revalidate`          | On-demand revalidation (`POST`)                                                                      |
-| `/guestbook`               | A swarza database with Drizzle (`@libsql/client/web`)                                                |
-| `/db`, `/api/db`           | Database timings measured live: reads, writes, a transaction, a batch                                |
-| `/uploads`, `/api/storage` | Uploads in a Storage bucket (AWS SDK): upload, list, read through the app or by signed link; timings |
-| `proxy.ts`                 | Middleware: redirect `/old`, request and response headers                                            |
-| `next.config.mjs`          | Redirect, rewrite, headers                                                                           |
+| Page                      | What it shows                                                                                       |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/`                       | Landing page, prerendered at build                                                                  |
+| `/schedule`               | ISR (`revalidate = 30`) over a data cache entry tagged `program`                                    |
+| `/api/revalidate`         | On-demand revalidation (`POST`): "the organisers publish a change"                                  |
+| `/talks/[slug]`           | `generateStaticParams`; the lightning talks are left out and render on first request                |
+| `/now`                    | Live board: rendered per request with `headers()` and `cookies()`, two parts streamed with Suspense |
+| `/agenda`                 | Server Actions that save picks in a cookie, then `revalidatePath`                                   |
+| `/venue`                  | `next/image` with a blur placeholder                                                                |
+| `/guestbook`              | Attendee wall: a swarza database with Drizzle (`@libsql/client/web`)                                |
+| `/uploads`                | Photos: uploads to a Storage bucket (AWS SDK), listed, read through the app or by signed link       |
+| `/under-the-hood`         | Which feature each page uses, plus database and bucket timings measured live                        |
+| `/api/schedule`           | Route handler on Node.js, also at `/schedule.json` (a rewrite)                                      |
+| `/api/now`                | Route handler on the edge runtime                                                                   |
+| `/api/db`, `/api/storage` | The timings as JSON                                                                                 |
+| `proxy.ts`                | Middleware: redirects `/live` to `/now`, passes the country on, counts visits to `/now`             |
+| `next.config.mjs`         | Redirects (`/program`, `/rsvp`), a rewrite and a headers rule                                       |
+| `jobs/heartbeat.ts`       | A scheduled job every 5 minutes that logs how many people signed the wall                           |
+
+Without a database or a bucket the site still works: the wall, the photos and the timings say what
+to bind.
 
 ## What you need
 
@@ -66,7 +74,7 @@ An application restarts with new bindings and variables within seconds.
 
 ## 4. Create the table
 
-The guestbook needs its table. Run the migrations from your machine with an access token: on the
+The attendee wall needs its table. Run the migrations from your machine with an access token: on the
 database's page, copy its connection URL, then create an access token under "Access tokens for other
 tools" (it is shown once).
 
@@ -88,7 +96,7 @@ To deploy a preview instead, run `next build` and then `swarza deploy` (no `--pr
 your git branch.
 
 `swarza.json` also lists the scheduled job `jobs/heartbeat.ts` (every 5 minutes). It starts with a
-production deploy, and its output shows in the application's Logs tab.
+production deploy, and its output (how many people signed the wall) shows in the application's Logs tab.
 
 Measured on staging on a Starter application (a quarter of a CPU), 50 calls each, p50 / p90: a query
 0.53 / 1.19 ms, 20 rows with Drizzle 0.88 / 1.87 ms, an insert 1.01 / 1.80 ms, a transaction

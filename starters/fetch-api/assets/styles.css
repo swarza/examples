@@ -1,0 +1,525 @@
+/* Black and white, type first: IBM Plex, 1px rules, an 8px spacing scale, no colour. */
+:root {
+  --paper: #ffffff;
+  --ink: #0b0b0b;
+  --muted: #5e5e5e;
+  --faint: #dedede;
+  --tile: #f4f4f4;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 48px;
+  --s6: 64px;
+  --s7: 96px;
+  --gutter: var(--s3);
+  --max: 1280px;
+
+  --t-meta: 12px;
+  --t-small: 14px;
+  --t-body: 16px;
+  --t-title: 20px;
+  --t-display: 64px;
+  --wordmark: 40px;
+
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0b0b0b;
+    --ink: #f4f4f4;
+    --muted: #a3a3a3;
+    --faint: #2a2a2a;
+    --tile: #161616;
+    color-scheme: dark;
+  }
+}
+@media (max-width: 900px) {
+  :root {
+    --t-display: 48px;
+  }
+}
+@media (max-width: 600px) {
+  :root {
+    --gutter: var(--s2);
+    --t-display: 36px;
+    --wordmark: 30px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+/* The footer sits at the bottom of short pages. */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t-body) / 1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+  font-weight: 400;
+}
+code {
+  font: 0.875em var(--mono);
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+main {
+  flex: 1;
+}
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+.muted {
+  color: var(--muted);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.kicker,
+.more,
+.price,
+.label,
+.mast-meta {
+  font: 500 var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Masthead */
+.mast {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-block: var(--s4) var(--s3);
+}
+.logo {
+  font: 400 var(--wordmark) / 1 var(--serif);
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+.mast-meta {
+  font-weight: 400;
+  color: var(--muted);
+  text-align: right;
+}
+.nav {
+  display: flex;
+  gap: var(--s3);
+  overflow-x: auto;
+  border-block: 1px solid var(--ink);
+  font-size: var(--t-small);
+  font-weight: 500;
+  scrollbar-width: none;
+}
+.nav a {
+  flex: none;
+  padding-block: 13px;
+  line-height: 22px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav a:hover {
+  box-shadow: inset 0 -1px 0 var(--faint);
+}
+.nav a[aria-current="page"] {
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+/* The hero: a black band in both themes, with the dithered sunrise in its bottom right corner. */
+.hero {
+  --paper: #0b0b0b;
+  --ink: #f4f4f4;
+  --muted: #b0b0b0;
+  position: relative;
+  overflow: hidden;
+  margin-top: var(--s5);
+  background: var(--paper);
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  .hero {
+    --paper: #161616;
+    border-block: 1px solid #2a2a2a;
+  }
+}
+/* One image pixel per 4px cell, never scaled, so the dither stays crisp at every width. */
+.hero-art {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1920px;
+  max-width: none;
+  height: 480px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.hero-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding-block: var(--s7);
+}
+.hero-text .display {
+  max-width: 11em;
+}
+.hero-text .kicker {
+  color: var(--muted);
+}
+.display {
+  font: 400 var(--t-display) / 1.05 var(--serif);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 var(--t-small) / 20px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.is-open .dot {
+  background: currentColor;
+}
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s3);
+  font-weight: 500;
+}
+
+/* Page body */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+  padding-block: var(--s6);
+}
+.page {
+  padding-top: var(--s5);
+}
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  max-width: 44rem;
+}
+.dek {
+  font-size: var(--t-title);
+  line-height: 1.4;
+  color: var(--muted);
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--ink);
+}
+.section-head h2 {
+  font: 600 var(--t-title) / 1.2 var(--sans);
+  letter-spacing: -0.01em;
+}
+.more {
+  flex: none;
+  font-weight: 400;
+}
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s6) var(--s5);
+}
+.note {
+  margin-top: var(--s2);
+  font-size: var(--t-small);
+}
+.note-lead {
+  margin-bottom: var(--s3);
+}
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  max-width: 36rem;
+}
+
+/* Cards: this week's coffee */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3);
+  background: var(--tile);
+}
+.card .title {
+  margin-top: var(--s1);
+  font: 400 28px / 1.15 var(--serif);
+  letter-spacing: -0.02em;
+}
+.card .price {
+  margin-top: auto;
+  padding-top: var(--s2);
+  font-size: var(--t-small);
+}
+
+/* Hours */
+.hours {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.hours th,
+.hours td {
+  padding-block: 10px;
+  border-bottom: 1px solid var(--faint);
+  text-align: left;
+  font-weight: 400;
+}
+.hours td {
+  text-align: right;
+  font: var(--t-small) / 24px var(--mono);
+}
+.hours .today th,
+.hours .today td {
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+.hours .today th::after {
+  content: "Today";
+  margin-left: var(--s1);
+  padding: 2px 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 10px / 1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  vertical-align: 2px;
+}
+
+/* Menu */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s6) var(--s5);
+}
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.items li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s3);
+  padding-block: 12px;
+  border-top: 1px solid var(--faint);
+}
+.items .muted {
+  font-size: var(--t-small);
+}
+.item-name {
+  font-weight: 500;
+}
+.price {
+  flex: none;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  font-size: var(--t-small);
+}
+
+/* Routes list */
+.routes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-small);
+}
+.routes li {
+  padding-block: 10px;
+  border-top: 1px solid var(--faint);
+  color: var(--muted);
+}
+.routes li:last-child {
+  border-bottom: 1px solid var(--faint);
+}
+.routes a {
+  display: inline-block;
+  min-width: 9.5rem;
+  margin-right: var(--s1);
+  color: var(--ink);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  max-width: 30rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+.label {
+  color: var(--muted);
+}
+input {
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: var(--t-body) / 24px var(--sans);
+}
+input:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 -1px 0 var(--ink);
+}
+input[aria-invalid="true"] {
+  border-bottom-width: 2px;
+}
+.error,
+.alert {
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+.error::before,
+.alert::before {
+  content: "✕ ";
+}
+.alert {
+  margin-bottom: var(--s3);
+  padding: 12px var(--s2);
+  border: 1px solid var(--ink);
+}
+button {
+  align-self: flex-start;
+  padding: 14px var(--s4);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+button:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.form-panel {
+  padding-top: var(--s2);
+  border-top: 1px solid var(--ink);
+}
+
+/* Footer */
+.footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3) var(--s5);
+  padding-block: var(--s3) var(--s6);
+  border-top: 1px solid var(--ink);
+  font-size: var(--t-small);
+}
+.footer-name {
+  font: 400 var(--t-title) / 1.2 var(--serif);
+  margin-bottom: var(--s1);
+}
+.footer .kicker {
+  margin-bottom: var(--s1);
+}
+.footer .muted {
+  max-width: 36rem;
+}
+
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .split,
+  .menu,
+  .footer {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .mast-meta {
+    display: none;
+  }
+  .hero {
+    margin-top: var(--s3);
+  }
+  /* Half size on phones (2px cells), so the sunrise fits under the text. */
+  .hero-art {
+    width: 960px;
+    height: 240px;
+  }
+  .hero-text {
+    padding-block: var(--s5) 168px;
+  }
+  .stack {
+    gap: var(--s5);
+    padding-block: var(--s5);
+  }
+  .page {
+    padding-top: var(--s4);
+  }
+  .dek {
+    font-size: 18px;
+  }
+  .card .title {
+    font-size: 24px;
+  }
+}

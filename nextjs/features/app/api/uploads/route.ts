@@ -1,8 +1,9 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { bucket, storage } from "@/lib/storage";
+import { bucket, hasStorage, storage } from "@/lib/storage";
 
 /** POST from the form on /uploads: stores the file in the bucket, then goes back to the page. */
 export async function POST(request: Request) {
+  if (!hasStorage()) return new Response("No bucket is bound to this application.", { status: 503 });
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File) || !file.size) return new Response("Choose a file.", { status: 400 });

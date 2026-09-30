@@ -10,6 +10,9 @@ import * as schema from "./schema";
 let rawClient: Client | null = null;
 let instance: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+/** Whether a database is bound. Pages check this at request time and explain how to bind one. */
+export const hasDatabase = () => Boolean(process.env.DATABASE_URL);
+
 /** The libSQL client, created on first use: `next build` runs without the variables. */
 export function client() {
   rawClient ??= createClient({ url: process.env.DATABASE_URL!, authToken: process.env.DATABASE_AUTH_TOKEN });

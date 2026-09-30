@@ -5,8 +5,8 @@
   },
   "scheduledJobs": [
     {
-      "schedule": "*/10 * * * *",
-      "function": "jobs/heartbeat.mjs"
+      "schedule": "0 18 * * *",
+      "function": "jobs/tomorrow.mjs"
     }
   ]
 }
