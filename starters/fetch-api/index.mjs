@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { currency, hours, menu, settings } from "./data.mjs";
 import { openStatus, statusText } from "./clock.mjs";
-import { homePage, menuPage, notFoundPage, subscribePage, thanksPage } from "./pages.mjs";
+import { homePage, howItWorksPage, menuPage, notFoundPage, subscribePage, thanksPage } from "./pages.mjs";
 
 // Files next to this module are read once, when a worker starts. The upload is read-only.
 const file = (name) => readFileSync(new URL(`./assets/${name}`, import.meta.url));
@@ -14,6 +14,7 @@ const assets = {
   "/styles.css": { body: file("styles.css"), type: "text/css; charset=utf-8" },
   "/favicon.svg": { body: file("favicon.svg"), type: "image/svg+xml" },
   "/dither.png": { body: file("dither.png"), type: "image/png" },
+  "/hints.js": { body: file("hints.js"), type: "text/javascript; charset=utf-8" },
 };
 
 // Cache-Control: pages that show the time are never cached; the menu may be, for a few minutes.
@@ -30,23 +31,29 @@ const page = (body, { status = 200, cache = NO_STORE } = {}) =>
 const json = (data, { status = 200, cache = NO_STORE } = {}) =>
   Response.json(data, { status, headers: { "cache-control": cache } });
 
-/** Routes by method and path. Each gets `{ request, shop, ctx }`. */
+/**
+ * Routes by method and path. Each gets `{ request, shop, ctx, origin }`; `origin` is the address the
+ * page was asked for, which the feature bubbles use in their curl examples.
+ */
 const routes = {
-  "GET /": ({ request, shop }) =>
+  "GET /": ({ request, shop, origin }) =>
     page(
       homePage({
         shop,
+        origin,
         status: openStatus(shop.timeZone),
         // The visitor's IP; swarza puts it first in X-Forwarded-For.
         visitor: { ip: request.headers.get("x-forwarded-for")?.split(",")[0].trim() },
       }),
     ),
 
-  "GET /menu": ({ shop }) => page(menuPage({ shop }), { cache: FIVE_MINUTES }),
+  "GET /menu": ({ shop, origin }) => page(menuPage({ shop, origin }), { cache: FIVE_MINUTES }),
 
-  "GET /subscribe": ({ shop }) => page(subscribePage({ shop }), { cache: FIVE_MINUTES }),
+  "GET /subscribe": ({ shop, origin }) => page(subscribePage({ shop, origin }), { cache: FIVE_MINUTES }),
 
   "POST /subscribe": subscribe,
+
+  "GET /how-it-works": ({ shop, origin }) => page(howItWorksPage({ shop, origin }), { cache: FIVE_MINUTES }),
 
   "GET /api": () =>
     json(
@@ -75,7 +82,7 @@ const routes = {
 };
 
 /** The newsletter form. Answers with a page, or with JSON when the client asks for it. */
-async function subscribe({ request, shop, ctx }) {
+async function subscribe({ request, shop, ctx, origin }) {
   const wantsJson = request.headers.get("accept")?.includes("application/json");
   const input = request.headers.get("content-type")?.includes("application/json")
     ? await request.json().catch(() => ({}))
@@ -91,7 +98,7 @@ async function subscribe({ request, shop, ctx }) {
   if (Object.keys(errors).length) {
     return wantsJson
       ? json({ ok: false, errors }, { status: 422 })
-      : page(subscribePage({ shop, values, errors }), { status: 422 });
+      : page(subscribePage({ shop, values, errors, origin }), { status: 422 });
   }
 
   // Work that should not hold up the answer: it runs after the response is sent.
@@ -99,7 +106,7 @@ async function subscribe({ request, shop, ctx }) {
 
   return wantsJson
     ? json({ ok: true, email: values.email, message: "Thanks, you are on the list." }, { status: 201 })
-    : page(thanksPage({ shop, signup: values }));
+    : page(thanksPage({ shop, signup: values, origin }));
 }
 
 /** Logs the sign-up (see the Logs tab) and, if SIGNUP_WEBHOOK_URL is set, posts it there. */
@@ -136,7 +143,7 @@ export default {
     }
 
     const route = routes[`${method} ${path}`];
-    if (route) return route({ request, shop, ctx });
+    if (route) return route({ request, shop, ctx, origin: url.origin });
 
     // A known path with another method: 405, and which methods it takes.
     const allowed = Object.keys(routes)
@@ -148,6 +155,6 @@ export default {
 
     if (path.startsWith("/api/")) return json({ error: "Not found" }, { status: 404 });
     // The path is shown as typed (decoded); pages.mjs escapes it, so /<script> stays text.
-    return page(notFoundPage({ shop, path: decodePath(path) }), { status: 404 });
+    return page(notFoundPage({ shop, path: decodePath(path), origin: url.origin }), { status: 404 });
   },
 };

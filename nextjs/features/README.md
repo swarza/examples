@@ -5,6 +5,12 @@ the event and shows one Next.js feature on swarza, deployed with `@swarza/next`.
 [Under the hood](app/under-the-hood/page.tsx) page lists the same mapping and times the database and
 the bucket live.
 
+Look for the pulsing dots. Each one sits next to something that uses a Next.js feature: a
+timestamp, a button, a form, a photo, a link. Tap it to see what the feature does there, which part
+of swarza serves it, and how to test it yourself (with this site's address filled in). The "Show
+features" switch in the header hides the dots, and the browser remembers the choice. The words
+live in `lib/features.ts`, and the dot is `components/FeatureHint.tsx`.
+
 | Page                      | What it shows                                                                                       |
 | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | `/`                       | Landing page, prerendered at build                                                                  |
@@ -16,7 +22,7 @@ the bucket live.
 | `/venue`                  | `next/image` with a blur placeholder                                                                |
 | `/guestbook`              | Attendee wall: a swarza database with Drizzle (`@libsql/client/web`)                                |
 | `/uploads`                | Photos: uploads to a Storage bucket (AWS SDK), listed, read through the app or by signed link       |
-| `/under-the-hood`         | Which feature each page uses, plus database and bucket timings measured live                        |
+| `/under-the-hood`         | Which feature each page uses, how to test it, plus database and bucket timings measured live        |
 | `/api/schedule`           | Route handler on Node.js, also at `/schedule.json` (a rewrite)                                      |
 | `/api/now`                | Route handler on the edge runtime                                                                   |
 | `/api/db`, `/api/storage` | The timings as JSON                                                                                 |

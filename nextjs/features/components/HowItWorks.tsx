@@ -2,14 +2,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { feature } from "@/lib/features";
 
-/** The note at the end of each page: which Next.js and swarza features it shows, and where the code is. */
+/** The card at the end of each page: which Next.js and swarza features it shows, and where the code is. */
 export function HowItWorks({ id, children }: { id: string; children?: ReactNode }) {
   const f = feature(id);
   return (
     <aside className="how" aria-label="How this page works">
       <div className="how-head">
-        <span className="kicker">How this page works</span>
-        <Link href={`/under-the-hood#${f.id}`} className="kicker how-more">
+        <h2 className="label">How this page works</h2>
+        <Link href={`/under-the-hood#${f.id}`} className="how-more">
           Under the hood →
         </Link>
       </div>
@@ -24,7 +24,7 @@ export function HowItWorks({ id, children }: { id: string; children?: ReactNode 
         </div>
         <div>
           <dt>Code</dt>
-          <dd className="how-code">
+          <dd className="code-list">
             {f.code.map((c) => (
               <code key={c}>{c}</code>
             ))}

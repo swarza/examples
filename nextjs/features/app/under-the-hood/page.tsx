@@ -1,8 +1,11 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FeatureHint } from "@/components/FeatureHint";
 import { NeedsBucket, NeedsDatabase } from "@/components/Notice";
+import { Steps } from "@/components/Steps";
 import { hasDatabase } from "@/lib/db";
-import { features } from "@/lib/features";
+import { features, hintsFor } from "@/lib/features";
 import { hasStorage } from "@/lib/storage";
 import { measureStorage } from "@/lib/storage-timing";
 import { measure } from "@/lib/timing";
@@ -11,18 +14,21 @@ export const metadata = { title: "Under the hood" };
 // The measurements run on each visit, and the bindings are read at request time.
 export const dynamic = "force-dynamic";
 
-export default function UnderTheHood() {
+export default async function UnderTheHood() {
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
   return (
     <div className="page">
-      <div className="page-head">
-        <p className="kicker">Under the hood</p>
+      <header className="page-head">
+        <p className="eyebrow">Under the hood</p>
         <h1>How this site works</h1>
-        <p className="dek">
+        <p className="lead">
           Hydrate is a demo. Each page does one real job with a Next.js feature, running on swarza. Here is
           which feature, which part of swarza and where the code is. Below that, the database and the bucket
-          are timed from inside the app, live.
+          are timed from inside the app, live. On the other pages, the pulsing dots show the same, next to the
+          thing that uses it.
         </p>
-      </div>
+      </header>
 
       <section>
         <div className="section-head">
@@ -30,43 +36,62 @@ export default function UnderTheHood() {
           <span className="section-more muted">{features.length} parts</span>
         </div>
         <ol className="map">
-          {features.map((f) => (
-            <li key={f.id} id={f.id}>
-              <div className="map-page">
-                <span className="title">{f.href ? <Link href={f.href}>{f.label}</Link> : f.label}</span>
-                <code>{f.path}</code>
-              </div>
-              <dl className="map-cols">
-                <div>
-                  <dt>Next.js</dt>
-                  <dd>{f.next}</dd>
+          {features.map((f) => {
+            const tries = hintsFor(f.id);
+            return (
+              <li key={f.id} id={f.id}>
+                <div className="map-page">
+                  <h3>{f.href ? <Link href={f.href}>{f.label}</Link> : f.label}</h3>
+                  <code>{f.path}</code>
                 </div>
-                <div>
-                  <dt>swarza</dt>
-                  <dd>{f.swarza}</dd>
-                </div>
-                <div>
-                  <dt>Code</dt>
-                  <dd className="how-code">
-                    {f.code.map((c) => (
-                      <code key={c}>{c}</code>
-                    ))}
-                  </dd>
-                </div>
-              </dl>
-            </li>
-          ))}
+                <dl className="map-cols">
+                  <div>
+                    <dt>Next.js</dt>
+                    <dd>{f.next}</dd>
+                  </div>
+                  <div>
+                    <dt>swarza</dt>
+                    <dd>{f.swarza}</dd>
+                  </div>
+                  <div>
+                    <dt>Code</dt>
+                    <dd className="code-list">
+                      {f.code.map((c) => (
+                        <code key={c}>{c}</code>
+                      ))}
+                    </dd>
+                  </div>
+                  {tries.length ? (
+                    <div className="map-try">
+                      <dt>Try it</dt>
+                      <dd>
+                        {tries.map((t) => (
+                          <div key={t.id} className="map-try-item">
+                            <p className="map-try-title">{t.title}</p>
+                            <Steps steps={t.test} origin={origin} className="steps" />
+                          </div>
+                        ))}
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </li>
+            );
+          })}
         </ol>
       </section>
 
       <section id="database">
         <div className="section-head">
-          <h2>The database, measured just now</h2>
+          <h2>
+            The database, measured just now
+            <FeatureHint id="timings" />
+          </h2>
           <a href="/api/db" className="section-more">
             JSON →
           </a>
         </div>
-        <p className="note-line">
+        <p className="note">
           Each call 20 times in a row, from this app to its database. Milliseconds as the app sees them:
           network, database and client together. The median is the big number; p90 and the slowest follow.
         </p>
@@ -82,7 +107,7 @@ export default function UnderTheHood() {
             JSON, all sizes →
           </a>
         </div>
-        <p className="note-line">
+        <p className="note">
           Small objects written, read and deleted five times each, then a HEAD and a list. The JSON endpoint
           also times 1 MB objects.
         </p>
@@ -97,23 +122,23 @@ export default function UnderTheHood() {
         </div>
         <ul className="commands">
           <li>
-            <code>curl {"<site>"}/schedule.json</code>
+            <code>curl {origin}/schedule.json</code>
             <span>The program as JSON (a rewrite to /api/schedule, Node.js runtime).</span>
           </li>
           <li>
-            <code>curl {"<site>"}/api/now</code>
+            <code>curl {origin}/api/now</code>
             <span>What is on stage now, from the edge runtime.</span>
           </li>
           <li>
-            <code>curl -X POST {"<site>"}/api/revalidate</code>
+            <code>curl -X POST {origin}/api/revalidate</code>
             <span>Publish the program again: the schedule and talk pages regenerate.</span>
           </li>
           <li>
-            <code>curl -I {"<site>"}/live</code>
+            <code>curl -I {origin}/live</code>
             <span>A redirect to /now, made by proxy.ts.</span>
           </li>
           <li>
-            <code>curl {"<site>"}/api/db?n=50</code>
+            <code>curl {origin}/api/db?n=50</code>
             <span>Database timings with more calls.</span>
           </li>
         </ul>
@@ -155,14 +180,14 @@ async function DatabaseTimings() {
     return (
       <>
         <Timings rows={await measure(20)} />
-        <p className="note-line">
+        <p className="note">
           On a small plan the app gets part of a CPU core: a burst of calls can use up its share and wait for
           the next 100 ms, which shows as a higher max.
         </p>
       </>
     );
   } catch (e) {
-    return <p className="note-line">Could not measure: {e instanceof Error ? e.message : String(e)}</p>;
+    return <p className="note">Could not measure: {e instanceof Error ? e.message : String(e)}</p>;
   }
 }
 
@@ -171,6 +196,6 @@ async function StorageTimings() {
   try {
     return <Timings rows={await measureStorage(5, ["1 KB", "100 KB"])} />;
   } catch (e) {
-    return <p className="note-line">Could not measure: {e instanceof Error ? e.message : String(e)}</p>;
+    return <p className="note">Could not measure: {e instanceof Error ? e.message : String(e)}</p>;
   }
 }

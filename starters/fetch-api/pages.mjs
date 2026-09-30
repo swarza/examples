@@ -3,7 +3,7 @@
  * into the form can never become markup; only other `html` results are inserted as they are.
  */
 import { featured, formatPrice, hours, menu } from "./data.mjs";
-import { statusText } from "./clock.mjs";
+import { feature, features } from "./features.mjs";
 
 class Html {
   constructor(value) {
@@ -27,18 +27,61 @@ export function html(strings, ...values) {
   return new Html(strings.reduce((out, s, i) => out + render(values[i - 1]) + s));
 }
 
+/** Plain text where `backticks` become <code>. Everything is still escaped. */
+const rich = (text) => text.split("`").map((part, i) => (i % 2 ? html`<code>${part}</code>` : part));
+
 const FONTS =
-  "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;1,400&display=swap";
+  "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap";
 
 const NAV = [
   ["/", "Today"],
   ["/menu", "Menu"],
   ["/subscribe", "Newsletter"],
+  ["/how-it-works", "How it works"],
   ["/api", "JSON API"],
 ];
 
-/** The frame around every page: head, masthead, navigation and footer. */
-function layout({ shop, title, path, body }) {
+// Runs before the first paint, so bubbles someone switched off never flash in.
+const FEATURES_PREF = `try{if(localStorage.getItem("halftone-features")==="off")document.documentElement.dataset.features="off"}catch(e){}`;
+
+/**
+ * A feature bubble. Without JavaScript it is a <details> that opens as a sheet at the bottom of
+ * the screen; hints.js turns it into a button with a popover. The texts live in features.mjs.
+ */
+function hint(id, origin) {
+  const f = feature(id);
+  return html`
+    <details class="hint">
+      <summary class="hint-btn" aria-label="How it works: ${f.title}">
+        <span aria-hidden="true">?</span>
+      </summary>
+      <div class="hint-pop" id="hint-${id}">
+        <p class="hint-title">${f.title}</p>
+        <p>${rich(f.what)}</p>
+        <p class="hint-label">Try it</p>
+        ${steps(f, origin)}
+        <a class="hint-more" href="/how-it-works#${id}">All features</a>
+      </div>
+    </details>
+  `;
+}
+
+const steps = (f, origin) => html`
+  <ol class="steps">
+    ${f
+      .steps(origin)
+      .map(
+        (step) => html`
+          <li>
+            ${rich(step.text)} ${step.code ? html`<pre class="code"><code>${step.code}</code></pre>` : ""}
+          </li>
+        `,
+      )}
+  </ol>
+`;
+
+/** The frame around every page: head, header with navigation, and footer. */
+function layout({ shop, title, path, body, brandHint = "" }) {
   return html`<!doctype html>
     <html lang="en">
       <head>
@@ -49,17 +92,25 @@ function layout({ shop, title, path, body }) {
           name="description"
           content="${shop.shopName}: a small coffee roaster and café. A swarza fetch app demo."
         />
+        <meta name="theme-color" content="#5b2616" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="${FONTS}" />
         <link rel="stylesheet" href="/styles.css" />
+        <script>
+          ${new Html(FEATURES_PREF)};
+        </script>
+        <script src="/hints.js" defer></script>
       </head>
       <body>
-        <header class="wrap">
-          <div class="mast">
-            <a class="logo" href="/">${shop.shopName}</a>
-            <p class="mast-meta">Roastery and café<br />${shop.address}</p>
+        <header class="wrap top">
+          <div class="row">
+            <a class="brand" href="/">
+              <img src="/favicon.svg" alt="" width="40" height="40" />
+              <span>${shop.shopName}</span>
+            </a>
+            ${brandHint}
           </div>
           <nav class="nav" aria-label="Main">
             ${NAV.map(
@@ -69,21 +120,22 @@ function layout({ shop, title, path, body }) {
           </nav>
         </header>
         <main>${body}</main>
-        <footer class="wrap">
-          <div class="footer">
+        <footer class="site-foot">
+          <div class="wrap foot">
             <div>
-              <p class="footer-name">${shop.shopName}</p>
-              <p class="muted">${shop.address}. Closed on Mondays, when we roast.</p>
+              <p class="foot-name">${shop.shopName}</p>
+              <p class="foot-muted">
+                Roastery and café, ${shop.address}.<br />Closed on Mondays, when we roast.
+              </p>
             </div>
             <div>
-              <p class="kicker">About this demo</p>
-              <p class="muted">
+              <p class="foot-title">About this demo</p>
+              <p class="foot-muted">
                 A
                 <a href="https://github.com/swarza/examples/tree/main/starters/fetch-api"
                   >fetch app on swarza</a
-                >: one <code>fetch</code> handler serves these pages, the JSON API and the files. The name and
-                the time zone come from the <code>SHOP_NAME</code> and <code>TIME_ZONE</code> variables, now
-                “${shop.shopName}” and ${shop.timeZone}.
+                >: one <code>fetch</code> handler serves these pages, the JSON API and the files. The yellow
+                bubbles show what the server does; <a href="/how-it-works">How it works</a> lists them all.
               </p>
             </div>
           </div>
@@ -92,13 +144,34 @@ function layout({ shop, title, path, body }) {
     </html> `;
 }
 
-const statusLine = (status) => html`
-  <p class="status ${status.open ? "is-open" : "is-closed"}">
-    <span class="dot" aria-hidden="true"></span>${statusText(status)}
-  </p>
-`;
+/** The sign: a green or red pill, and when that changes. */
+function statusSign(status) {
+  const detail = status.open
+    ? status.closingSoon
+      ? `Closing soon, at ${status.closes}`
+      : `Until ${status.closes} today`
+    : status.opens
+      ? `Opens ${status.opens.day} at ${status.opens.time}`
+      : "";
+  return html`
+    <p class="sign">
+      <span class="status ${status.open ? "is-open" : "is-closed"}">
+        <span class="dot" aria-hidden="true"></span>${status.open ? "Open now" : "Closed"}
+      </span>
+      ${detail ? html`<span class="sign-detail">${detail}</span>` : ""}
+    </p>
+  `;
+}
 
-const price = (item) => html`<span class="price">${formatPrice(item.price)}</span>`;
+const price = (item, className = "price") =>
+  html`<span class="${className}">${formatPrice(item.price)}</span>`;
+
+const notes = (item) =>
+  item.notes?.length
+    ? html`<ul class="tags" aria-label="Tasting notes">
+        ${item.notes.map((note) => html`<li class="tag">${note}</li>`)}
+      </ul>`
+    : "";
 
 function hoursTable(status) {
   return html`
@@ -110,7 +183,9 @@ function hoursTable(status) {
         ${hours.map(
           (h, i) => html`
             <tr ${i === status.now.day ? html`class="today" aria-current="date"` : ""}>
-              <th scope="row">${h.day}</th>
+              <th scope="row">
+                ${h.day}${i === status.now.day ? html` <span class="today-tag">Today</span>` : ""}
+              </th>
               <td>
                 ${h.open ? `${h.open}–${h.close}` : `Closed${h.note ? `, ${h.note.toLowerCase()}` : ""}`}
               </td>
@@ -141,118 +216,149 @@ function signupForm({ values = {}, errors = {} } = {}) {
     <form class="form" method="post" action="/subscribe">
       ${field("name", "First name (optional)", "text", html`autocomplete="given-name" maxlength="60"`)}
       ${field("email", "Email", "email", html`autocomplete="email" required maxlength="254"`)}
-      <button type="submit">Sign up</button>
+      <button class="btn btn-ink" type="submit">Sign me up</button>
     </form>
   `;
 }
 
-export function homePage({ shop, status, visitor }) {
+export function homePage({ shop, status, visitor, origin }) {
+  const sectionOf = (item) => menu.find((s) => s.items.includes(item)).title;
   const body = html`
-    <section class="hero">
-      <img class="hero-art" src="/dither.png" alt="" width="1920" height="480" />
-      <div class="wrap hero-text">
-        <p class="kicker">${status.now.date}</p>
-        <h1 class="display">Roasted on Monday, poured all week.</h1>
-        ${statusLine(status)}
-        <p class="hero-links"><a href="/menu">See the menu</a><a href="#hours">Opening hours</a></p>
-      </div>
-    </section>
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-text">
+          <div class="row">${statusSign(status)} ${hint("open-now", origin)}</div>
+          <h1 class="display">Roasted on Monday, poured all week.</h1>
+          <div class="row">
+            <p class="hero-meta">${status.now.date}, ${status.now.time}</p>
+            ${hint("no-store", origin)}
+          </div>
+          <p class="actions">
+            <a class="btn btn-crema" href="/menu">See the menu</a>
+            <a class="btn btn-line" href="#hours">Opening hours</a>
+          </p>
+        </div>
+        <div class="hero-art">
+          <img src="/dither.png" alt="" width="288" height="336" />
+          <div class="art-hint">${hint("static-files", origin)}</div>
+        </div>
+      </section>
 
-    <div class="wrap stack">
-      <section>
+      <section class="block">
         <div class="section-head">
           <h2>On the bar this week</h2>
+          ${hint("api-json", origin)}
           <a class="more" href="/menu">Full menu</a>
         </div>
         <div class="cards">
           ${featured.map(
             (item) => html`
               <article class="card">
-                <p class="kicker">${menu.find((s) => s.items.includes(item)).title}</p>
-                <h3 class="title">${item.name}</h3>
+                <p class="tag tag-roast">${sectionOf(item)}</p>
+                <h3 class="card-title">${item.name}</h3>
                 <p class="muted">${item.description}</p>
-                ${price(item)}
+                ${notes(item)} ${price(item, "big-price")}
               </article>
             `,
           )}
         </div>
       </section>
 
-      <div class="split">
-        <section id="hours">
+      <div class="block split">
+        <section id="hours" class="panel">
           <div class="section-head">
             <h2>Opening hours</h2>
+            ${hint("scheduled-job", origin)}
             <span class="more muted">${shop.timeZone}</span>
           </div>
           ${hoursTable(status)}
-          <p class="muted note">
-            It is ${status.now.time} here. The server works out “open now” from these hours on every request,
-            in the <code>TIME_ZONE</code> you set.
-          </p>
+          <p class="muted small">It is ${status.now.time} in ${shop.timeZone}.</p>
         </section>
-        <section id="letter">
-          <div class="section-head"><h2>The roast letter</h2></div>
-          <p class="note-lead">One short email when a new coffee lands, about once a month.</p>
+        <section id="letter" class="panel panel-crema">
+          <div class="section-head">
+            <h2>The roast letter</h2>
+            ${hint("form-post", origin)}
+          </div>
+          <p class="lead">One short email when a new coffee lands, about once a month.</p>
           ${signupForm()}
         </section>
       </div>
 
-      <section>
-        <div class="section-head"><h2>How this page is made</h2></div>
-        <div class="split">
-          <div class="prose">
+      <section class="block">
+        <div class="panel panel-line made">
+          <div class="made-text">
+            <h2 class="h2">How this page is made</h2>
             <p>
-              Everything here comes from one <code>fetch(request, env, ctx)</code> function in
-              <code>index.mjs</code>: HTML pages, a form, a JSON API, the stylesheet and the images. There is
-              no framework, no build step and no dependency.
+              One <code>fetch(request, env, ctx)</code> function in <code>index.mjs</code> serves everything
+              here: the pages, the form, a JSON API, the stylesheet and the pictures. No framework, no build
+              step, no dependencies.
             </p>
-            <p class="muted">
-              This page was made for ${visitor.ip ?? "an unknown address"} at ${status.now.time}
-              (${shop.timeZone}) and is not cached. The menu is cached for five minutes.
-            </p>
+            <div class="row">
+              <p class="muted">
+                Made for <strong class="ip">${visitor.ip ?? "an unknown address"}</strong> at
+                ${status.now.time}, just now.
+              </p>
+              ${hint("visitor-ip", origin)}
+            </div>
+            <p><a class="btn btn-ink" href="/how-it-works">See every feature</a></p>
           </div>
           <ul class="routes">
             <li>
-              <a href="/menu"><code>GET /menu</code></a> the menu as a page
+              <a href="/menu"><code>GET /menu</code></a
+              ><span>the menu, cached 5 minutes</span>
             </li>
             <li>
-              <a href="/api/menu"><code>GET /api/menu</code></a> the same menu as JSON
+              <a href="/api/menu"><code>GET /api/menu</code></a
+              ><span>the same menu as JSON</span>
             </li>
             <li>
-              <a href="/api/hours"><code>GET /api/hours</code></a> hours and “open now”
+              <a href="/api/hours"><code>GET /api/hours</code></a
+              ><span>hours and open now</span>
             </li>
             <li>
-              <a href="/subscribe"><code>POST /subscribe</code></a> the form, as HTML or JSON
+              <a href="/subscribe"><code>POST /subscribe</code></a
+              ><span>the form, as HTML or JSON</span>
             </li>
           </ul>
         </div>
       </section>
     </div>
   `;
-  return layout({ shop, title: null, path: "/", body });
+  return layout({ shop, title: null, path: "/", body, brandHint: hint("shop-name", origin) });
 }
 
-export function menuPage({ shop }) {
+export function menuPage({ shop, origin }) {
   const body = html`
-    <div class="wrap stack page">
+    <div class="wrap">
       <header class="page-head">
-        <p class="kicker">Menu</p>
-        <h1 class="display">What we pour</h1>
-        <p class="dek">Prices include VAT. The same list is at <a href="/api/menu">/api/menu</a> as JSON.</p>
+        <div class="row">
+          <h1 class="display">What we pour</h1>
+          ${hint("menu-cache", origin)}
+        </div>
+        <div class="row">
+          <p class="dek">
+            Prices include VAT. The same list is at <a href="/api/menu">/api/menu</a> as JSON.
+          </p>
+          ${hint("api-json", origin)}
+        </div>
+        <nav class="chips" aria-label="Menu sections">
+          ${menu.map((s) => html`<a class="chip" href="#${s.id}">${s.title}</a>`)}
+        </nav>
       </header>
       <div class="menu">
         ${menu.map(
           (section) => html`
-            <section class="menu-section" id="${section.id}">
-              <div class="section-head"><h2>${section.title}</h2></div>
-              <p class="muted note-lead">${section.note}</p>
+            <section class="panel menu-section" id="${section.id}">
+              <h2 class="h2">${section.title}</h2>
+              <p class="muted small">${section.note}</p>
               <ul class="items">
                 ${section.items.map(
                   (item) => html`
                     <li>
-                      <div>
+                      <div class="item-text">
                         <p class="item-name">${item.name}</p>
-                        <p class="muted">${item.description}</p>
+                        <p class="muted small">${item.description}</p>
+                        ${notes(item)}
                       </div>
                       ${price(item)}
                     </li>
@@ -268,19 +374,26 @@ export function menuPage({ shop }) {
   return layout({ shop, title: "Menu", path: "/menu", body });
 }
 
-export function subscribePage({ shop, values, errors }) {
+export function subscribePage({ shop, values, errors, origin }) {
   const body = html`
-    <div class="wrap stack page">
-      <div class="split">
+    <div class="wrap">
+      <div class="page-split">
         <header class="page-head">
-          <p class="kicker">Newsletter</p>
           <h1 class="display">The roast letter</h1>
           <p class="dek">
             One short email when a new coffee lands, about once a month: where it is from, how it tastes and
             how we brew it. Nothing else.
           </p>
+          <div class="row">
+            <p class="muted small">We log each sign-up after we answer, and can pass it to a webhook.</p>
+            ${hint("wait-until", origin)}
+          </div>
         </header>
-        <section class="form-panel">
+        <section class="panel panel-crema">
+          <div class="section-head">
+            <h2>Sign up</h2>
+            ${hint("form-post", origin)}
+          </div>
           ${errors ? html`<p class="alert" role="alert">Please check the form.</p>` : ""}
           ${signupForm({ values, errors })}
         </section>
@@ -290,32 +403,76 @@ export function subscribePage({ shop, values, errors }) {
   return layout({ shop, title: "Newsletter", path: "/subscribe", body });
 }
 
-export function thanksPage({ shop, signup }) {
+export function thanksPage({ shop, signup, origin }) {
   const body = html`
-    <div class="wrap stack page">
+    <div class="wrap">
       <header class="page-head">
-        <p class="kicker">The roast letter</p>
+        <p class="tag tag-open">You are on the list</p>
         <h1 class="display">Thanks${signup.name ? `, ${signup.name}` : ""}.</h1>
         <p class="dek">We will write to ${signup.email} when the next coffee lands.</p>
-        <p class="muted note">
-          This demo keeps nothing: it logs the sign-up after answering (with <code>ctx.waitUntil</code>), so
-          you can see it on the Logs tab. A real shop would save it in a database.
+        <div class="row">
+          <p class="muted small">
+            This demo keeps nothing. It logs the sign-up after answering, with <code>ctx.waitUntil</code>, so
+            you can see it on the Logs tab. A real shop would save it in a database.
+          </p>
+          ${hint("wait-until", origin)}
+        </div>
+        <p class="actions">
+          <a class="btn btn-ink" href="/">Back to today</a
+          ><a class="btn btn-line" href="/menu">See the menu</a>
         </p>
-        <p class="hero-links"><a href="/">Back to today</a><a href="/menu">See the menu</a></p>
       </header>
     </div>
   `;
   return layout({ shop, title: "Thanks", path: null, body });
 }
 
-export function notFoundPage({ shop, path }) {
+export function howItWorksPage({ shop, origin }) {
   const body = html`
-    <div class="wrap stack page">
+    <div class="wrap">
       <header class="page-head">
-        <p class="kicker">404</p>
+        <h1 class="display">How it works</h1>
+        <p class="dek">
+          Every yellow bubble on this site, in one list: what the server does at that spot, and how to see it
+          for yourself. The commands use this site's address, so you can paste them as they are.
+        </p>
+      </header>
+      <ol class="features">
+        ${features.map(
+          (f, i) => html`
+            <li class="panel feature" id="${f.id}">
+              <p class="feature-num" aria-hidden="true">${i + 1}</p>
+              <h2 class="h2">${f.title}</h2>
+              <p>${rich(f.what)}</p>
+              <p class="hint-label">Try it</p>
+              ${steps(f, origin)}
+              <p class="feature-on">
+                <span class="muted">Bubble on</span>
+                ${f.on.map(([href, label]) => html`<a class="chip" href="${href}">${label}</a>`)}
+              </p>
+            </li>
+          `,
+        )}
+      </ol>
+    </div>
+  `;
+  return layout({ shop, title: "How it works", path: "/how-it-works", body });
+}
+
+export function notFoundPage({ shop, path, origin }) {
+  const body = html`
+    <div class="wrap">
+      <header class="page-head">
+        <div class="row">
+          <p class="tag tag-closed">404</p>
+          ${hint("not-found", origin)}
+        </div>
         <h1 class="display">Nothing on this shelf</h1>
-        <p class="dek">There is no page at <code>${path}</code>.</p>
-        <p class="hero-links"><a href="/">Back to today</a><a href="/menu">See the menu</a></p>
+        <p class="dek">There is no page at <code class="path">${path}</code>.</p>
+        <p class="actions">
+          <a class="btn btn-ink" href="/">Back to today</a
+          ><a class="btn btn-line" href="/menu">See the menu</a>
+        </p>
       </header>
     </div>
   `;

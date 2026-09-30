@@ -1,5 +1,6 @@
 import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { FeatureHint } from "@/components/FeatureHint";
 import { HowItWorks } from "@/components/HowItWorks";
 import { NeedsBucket } from "@/components/Notice";
 import { stamp } from "@/lib/program";
@@ -19,18 +20,18 @@ export default async function Uploads({
   const { stored, ms } = await searchParams;
   return (
     <div className="page">
-      <div className="page-head">
-        <p className="kicker">Photos and slides</p>
+      <header className="page-head">
+        <p className="eyebrow">Photos and slides</p>
         <h1>Share your photos</h1>
-        <p className="dek">
+        <p className="lead">
           Took a picture of a slide, or gave a talk? Upload it here, up to 10 MB. Everyone who visits this
           page sees the latest twenty.
         </p>
-      </div>
+      </header>
       {hasStorage() ? (
         <Files stored={stored} ms={ms} />
       ) : (
-        <NeedsBucket what="Uploads go to a Storage bucket." />
+        <NeedsBucket what="Uploads go to a Storage bucket." hint="storage" />
       )}
       <HowItWorks id="photos" />
     </div>
@@ -57,9 +58,12 @@ async function Files({ stored, ms }: { stored?: string; ms?: string }) {
             <span>A photo or your slides</span>
             <input type="file" name="file" required />
           </label>
-          <button type="submit" className="btn">
-            Upload
-          </button>
+          <span className="form-submit">
+            <button type="submit" className="btn btn-heat">
+              Upload
+            </button>
+            <FeatureHint id="storage" />
+          </span>
         </form>
         <p className="status">
           {stored ? (
@@ -89,7 +93,7 @@ async function Files({ stored, ms }: { stored?: string; ms?: string }) {
                   )}
                 </a>
                 <p className="file-name">{shown}</p>
-                <p className="byline">
+                <p className="meta">
                   {size(f.Size ?? 0)}
                   {f.LastModified ? ` · ${stamp(f.LastModified)}` : ""}
                 </p>
@@ -103,7 +107,7 @@ async function Files({ stored, ms }: { stored?: string; ms?: string }) {
           })}
         </ul>
       ) : (
-        <p className="note-line" id="files">
+        <p className="note" id="files">
           Nothing here yet. The first photo is yours.
         </p>
       )}

@@ -2,30 +2,27 @@
 import { useEffect, useRef } from "react";
 
 /**
- * An ordered-dither band (8x8 Bayer, 4px cells) drawn once on a canvas, in the style of swarza's
- * brand art. The box's size comes from CSS, so nothing moves when it draws.
- *
- * - "ink": a glow rising from the lower right, in the page's own ink and a grey on a transparent
- *   ground. It follows the theme (and .inverse panels) because it reads the colours from CSS.
- * - "heat": the swarza sunrise in its warm palette on black; the same in both themes.
+ * The swarza sunrise as an ordered dither (8x8 Bayer, 4px cells) in the HEAT colours, drawn once on
+ * a canvas. The darkest level is left transparent, so the dark panel behind it shows through. The
+ * box's size comes from CSS, so nothing moves when it draws.
  */
-export function Dither({ tone = "ink", className }: { tone?: "ink" | "heat"; className?: string }) {
+export function Dither({ className }: { className?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const el = box.current!;
     const cv = canvas.current!;
-    const draw = () => paint(el, cv, tone);
-    const size = new ResizeObserver(draw);
-    const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    let width = 0;
+    const size = new ResizeObserver(() => {
+      // Height changes alone (a phone's address bar) do not need a new picture.
+      const w = el.getBoundingClientRect().width;
+      if (w !== width) paint(el, cv);
+      width = w;
+    });
     size.observe(el);
-    scheme.addEventListener("change", draw);
-    return () => {
-      size.disconnect();
-      scheme.removeEventListener("change", draw);
-    };
-  }, [tone]);
+    return () => size.disconnect();
+  }, []);
 
   return (
     <div ref={box} className={`dither ${className ?? ""}`} aria-hidden="true">
@@ -40,7 +37,7 @@ const RAMP = ["#1a0a3d", "#6a35ff", "#ff2fcf", "#ff5a1a", "#ffd54a"];
 
 type RGB = [number, number, number];
 
-function paint(el: HTMLElement, cv: HTMLCanvasElement, tone: "ink" | "heat") {
+function paint(el: HTMLElement, cv: HTMLCanvasElement) {
   const { width, height } = el.getBoundingClientRect();
   const W = Math.ceil(width / CELL);
   const H = Math.ceil(height / CELL);
@@ -52,64 +49,41 @@ function paint(el: HTMLElement, cv: HTMLCanvasElement, tone: "ink" | "heat") {
   const ctx = cv.getContext("2d");
   if (!ctx) return;
   const img = ctx.createImageData(W, H);
-  const put = (x: number, y: number, c: RGB, a = 255) => {
-    const i = (y * W + x) * 4;
-    img.data[i] = c[0];
-    img.data[i + 1] = c[1];
-    img.data[i + 2] = c[2];
-    img.data[i + 3] = a;
-  };
-
-  if (tone === "ink") {
-    const style = getComputedStyle(el);
-    const ink = rgb(style.color);
-    const mid = rgb(style.getPropertyValue("--dither-mid").trim() || style.color);
-    // The glow's centre sits below the band, two thirds across; it fades out before the top edge.
-    const cx = W * 0.68;
-    const cy = H * 1.25;
-    const rx = Math.max(W * 0.5, H * 2.5);
-    const ry = H * 1.2;
-    for (let y = 0; y < H; y++)
-      for (let x = 0; x < W; x++) {
-        const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
-        const warp = 0.12 * (fbm(x * 0.05, y * 0.05) - 0.5);
-        const v = smooth(0, 1, clamp(1.08 - d + warp, 0, 1) * 1.4) * 0.9;
-        // Three levels (ground, grey, ink) with the Bayer threshold between them.
-        const level = Math.round(clamp(v * 2 + (bayer8(x, y) - 0.5), 0, 2));
-        if (level === 2) put(x, y, ink);
-        else if (level === 1) put(x, y, mid);
-      }
-  } else {
-    // The sunrise of scripts/examples-banner.mjs, fitted to a strip.
-    const palette = HEAT.map(hex);
-    const ramp = RAMP.map(hex);
-    const aspect = W / H;
-    for (let y = 0; y < H; y++)
-      for (let x = 0; x < W; x++) {
-        const u = (x + 0.5) / W;
-        const v = 1 - (y + 0.5) / H;
-        const px = (u - 0.7) * aspect * 0.12;
-        const py = (v + 0.2) * 1.05;
-        const warp = 0.06 * (fbm(px * 3, 1.8) - 0.5);
-        const d = Math.hypot(px, py) / 0.95 + warp;
-        const glow = clamp(1 - d * 0.9, 0, 1);
-        const drift = 0.12 * fbm(px * 2.5 + 0.6, py * 2.5 - 0.4);
-        let c = rampAt(ramp, glow + drift * glow).map((k) => k * (glow + drift * 0.6)) as RGB;
-        const lit = smooth(0.02, 0.12, Math.max(...c));
-        const t = (bayer8(x, H - 1 - y) - 0.5) * 0.5 * lit;
-        c = c.map((k) => k + t) as RGB;
-        let best = palette[0]!;
-        let bestD = Infinity;
-        for (const p of palette) {
-          const dd = (c[0] - p[0]) ** 2 + (c[1] - p[1]) ** 2 + (c[2] - p[2]) ** 2;
-          if (dd < bestD) {
-            bestD = dd;
-            best = p;
-          }
+  // The sunrise of scripts/examples-banner.mjs, fitted to the box.
+  const palette = HEAT.map(hex);
+  const ramp = RAMP.map(hex);
+  // The banner is about 4:1; a squarer box keeps the glow about as wide as the banner's.
+  const aspect = clamp(W / H, 2.2, 4);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const u = (x + 0.5) / W;
+      const v = 1 - (y + 0.5) / H;
+      const px = (u - 0.66) * aspect * 0.3;
+      const py = (v + 0.32) * 1.05;
+      const warp = 0.06 * (fbm(px * 3, 7.3 * 0.25) - 0.5);
+      const d = Math.hypot(px, py) / 0.95 + warp;
+      const glow = clamp(1 - d * 0.9, 0, 1);
+      const drift = 0.12 * fbm(px * 2.5 + 7.3 * 0.08, py * 2.5 - 7.3 * 0.05);
+      let c = rampAt(ramp, glow + drift * glow).map((k) => k * (glow + drift * 0.6)) as RGB;
+      const lit = smooth(0.02, 0.12, Math.max(...c));
+      const t = (bayer8(x, H - 1 - y) - 0.5) * 0.5 * lit;
+      c = c.map((k) => k + t) as RGB;
+      let best = 0;
+      let bestD = Infinity;
+      palette.forEach((p, i) => {
+        const dd = (c[0] - p[0]) ** 2 + (c[1] - p[1]) ** 2 + (c[2] - p[2]) ** 2;
+        if (dd < bestD) {
+          bestD = dd;
+          best = i;
         }
-        put(x, y, best.map((k) => k * 255) as RGB);
-      }
-  }
+      });
+      if (best === 0) continue;
+      const i = (y * W + x) * 4;
+      img.data[i] = palette[best]![0] * 255;
+      img.data[i + 1] = palette[best]![1] * 255;
+      img.data[i + 2] = palette[best]![2] * 255;
+      img.data[i + 3] = 255;
+    }
   ctx.putImageData(img, 0, 0);
 }
 
@@ -120,12 +94,6 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 const hex = (h: string): RGB => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255) as RGB;
-/** "rgb(11, 11, 11)" as bytes. */
-const rgb = (css: string): RGB => {
-  if (css.startsWith("#")) return hex(css).map((k) => k * 255) as RGB;
-  const [r = 0, g = 0, b = 0] = css.match(/[\d.]+/g)?.map(Number) ?? [];
-  return [r, g, b];
-};
 const hash = (x: number, y: number) => fract(Math.sin(x * 127.1 + y * 311.7) * 43758.5453);
 function vnoise(x: number, y: number) {
   const ix = Math.floor(x);

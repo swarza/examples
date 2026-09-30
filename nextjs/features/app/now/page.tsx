@@ -2,6 +2,7 @@ import { desc } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FeatureHint } from "@/components/FeatureHint";
 import { HowItWorks } from "@/components/HowItWorks";
 import { db, hasDatabase } from "@/lib/db";
 import { event, slotAt, stamp, talks, venueClock, type Slot } from "@/lib/program";
@@ -23,31 +24,43 @@ export default async function Now() {
   const asked = [now, next, ...talks].find((s) => s?.questions);
   return (
     <div className="page">
-      <div className="page-head">
-        <p className="kicker">
-          Live board · {venueClock(at).slice(0, 5)} in {event.city}
+      <header className="page-head">
+        <p className="eyebrow">
+          <span className="live">Live</span>
+          {venueClock(at).slice(0, 5)} in {event.city}
         </p>
         <h1>{now ? now.title : "Nothing on stage right now"}</h1>
-        <p className="dek">{describe(now, next)}</p>
-      </div>
+        <p className="lead">{describe(now, next)}</p>
+        <p className="badge-link">
+          <span className="label">On your badge</span>
+          <code>{h.get("host")}/live</code>
+          <FeatureHint id="proxy" />
+        </p>
+      </header>
       <div className="split">
         <div className="main stack">
           {next ? (
             <div className="up-next">
-              <span className="kicker">Up next · {next.start}</span>
+              <span className="up-next-tags">
+                <span className="label">Up next</span>
+                <time className="time-badge">{next.start}</time>
+              </span>
               {next.kind === "break" ? (
-                <span className="title">{next.title}</span>
+                <span className="up-next-title">{next.title}</span>
               ) : (
-                <Link href={`/talks/${next.slug}`} className="title">
+                <Link href={`/talks/${next.slug}`} className="up-next-title">
                   {next.title}
                 </Link>
               )}
-              {next.speaker ? <span className="byline">{next.speaker.name}</span> : null}
+              {next.speaker ? <span className="speaker-role">{next.speaker.name}</span> : null}
             </div>
           ) : null}
           <section>
             <div className="section-head">
-              <h2>Questions from the room</h2>
+              <h2>
+                Questions from the room
+                <FeatureHint id="streaming" />
+              </h2>
               <span className="section-more muted">{asked?.title}</span>
             </div>
             <Suspense fallback={<Waiting label="Collecting questions" />}>
@@ -65,14 +78,14 @@ export default async function Now() {
               <LatestSignatures />
             </Suspense>
           </section>
-          <p className="note-line">
+          <p className="note">
             On {event.day} this board follows the day. Until then it plays the program on today&apos;s clock
             in {event.city}, so there is always something on.
           </p>
         </div>
         <aside className="side">
-          <div className="panel inverse">
-            <span className="kicker">Your request</span>
+          <div className="panel">
+            <span className="label">Your request</span>
             <dl className="readout">
               <div>
                 <dt>Rendered</dt>
@@ -80,6 +93,7 @@ export default async function Now() {
                   <time id="now" dateTime={at.toISOString()}>
                     {stamp(at)}
                   </time>
+                  <FeatureHint id="dynamic" />
                 </dd>
               </div>
               <div>
@@ -90,7 +104,10 @@ export default async function Now() {
               </div>
               <div>
                 <dt>Country</dt>
-                <dd id="country">{h.get("x-country") ?? "unknown"}</dd>
+                <dd>
+                  <span id="country">{h.get("x-country") ?? "unknown"}</span>
+                  <FeatureHint id="geo" />
+                </dd>
               </div>
               <div>
                 <dt>Host</dt>
@@ -146,7 +163,7 @@ async function Questions({ slot }: { slot?: Slot }) {
       {questions.map((q, i) => (
         <li key={q}>
           <p>{q}</p>
-          <span className="byline">
+          <span className="meta">
             {3 + ((i * 7) % 11)} votes · asked from row {2 + ((i * 5) % 14)}
           </span>
         </li>
@@ -158,26 +175,24 @@ async function Questions({ slot }: { slot?: Slot }) {
 async function LatestSignatures() {
   if (!hasDatabase())
     return (
-      <p className="note-line">
+      <p className="note">
         Bind a database to see the latest names from the <Link href="/guestbook">attendee wall</Link> here.
       </p>
     );
   try {
     const rows = await db().select().from(entries).orderBy(desc(entries.id)).limit(4);
-    if (!rows.length) return <p className="note-line">No one yet. Be the first.</p>;
+    if (!rows.length) return <p className="note">No one yet. Be the first.</p>;
     return (
       <ul className="mini-wall">
         {rows.map((e) => (
           <li key={e.id}>
             <span className="speaker-name">{e.name}</span>
-            <span className="byline">{e.message}</span>
+            <span className="meta">{e.message}</span>
           </li>
         ))}
       </ul>
     );
   } catch {
-    return (
-      <p className="note-line">The wall&apos;s table is missing. Run the migrations (see the README).</p>
-    );
+    return <p className="note">The wall&apos;s table is missing. Run the migrations (see the README).</p>;
   }
 }

@@ -1,5 +1,6 @@
 import { desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { FeatureHint } from "@/components/FeatureHint";
 import { HowItWorks } from "@/components/HowItWorks";
 import { NeedsDatabase, Notice } from "@/components/Notice";
 import { db, hasDatabase } from "@/lib/db";
@@ -26,14 +27,17 @@ async function sign(form: FormData) {
 export default async function Guestbook() {
   return (
     <div className="page">
-      <div className="page-head">
-        <p className="kicker">RSVP</p>
+      <header className="page-head">
+        <p className="eyebrow">RSVP · tickets are free</p>
         <h1>The attendee wall</h1>
-        <p className="dek">
-          Tickets are free. Coming? Sign the wall with your name and one thing you hope to take home from the
-          day.
+        <p className="lead">
+          Coming? Sign the wall with your name and one thing you hope to take home from the day.
         </p>
-      </div>
+        <p className="head-note">
+          The front desk gets a head count in its logs every five minutes.
+          <FeatureHint id="jobs" />
+        </p>
+      </header>
       <Wall />
       <HowItWorks id="wall" />
     </div>
@@ -41,7 +45,8 @@ export default async function Guestbook() {
 }
 
 async function Wall() {
-  if (!hasDatabase()) return <NeedsDatabase what="The wall keeps its signatures in a database." />;
+  if (!hasDatabase())
+    return <NeedsDatabase what="The wall keeps its signatures in a database." hint="wall" />;
 
   let rows: (typeof entries.$inferSelect)[];
   let count: number;
@@ -68,15 +73,16 @@ async function Wall() {
   return (
     <>
       <div className="wall-top">
-        <p className="stat">
-          <span className="stat-num" id="count">
-            {count}
-          </span>
-          <span className="stat-label">
+        <div className="stat">
+          <p className="stat-num">
+            <span id="count">{count}</span>
+            <FeatureHint id="db-read" />
+          </p>
+          <p className="stat-label">
             {count === 1 ? "person has" : "people have"} signed. Read in{" "}
             <span id="query-ms">{ms.toFixed(2)}</span> ms (two queries).
-          </span>
-        </p>
+          </p>
+        </div>
         <form action={sign} className="form">
           <label>
             <span>Your name</span>
@@ -86,9 +92,12 @@ async function Wall() {
             <span>What you hope to take home</span>
             <input name="message" required maxLength={500} placeholder="How to cache without fear" />
           </label>
-          <button type="submit" className="btn">
-            Sign the wall
-          </button>
+          <span className="form-submit">
+            <button type="submit" className="btn btn-heat">
+              Sign the wall
+            </button>
+            <FeatureHint id="wall" />
+          </span>
         </form>
       </div>
       {rows.length ? (
@@ -104,7 +113,7 @@ async function Wall() {
           ))}
         </ul>
       ) : (
-        <p className="note-line" id="entries">
+        <p className="note" id="entries">
           No one has signed yet. Be the first.
         </p>
       )}

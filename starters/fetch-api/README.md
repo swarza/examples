@@ -8,15 +8,22 @@ The home page works out whether the shop is open from the opening hours and the 
 shop's time zone, on every request. The menu page and `/api/menu` read the same data, so the page and
 the API never disagree.
 
+The yellow **?** bubbles on the pages point at the things the server does: what happens at that spot
+and how to try it yourself, with `curl` commands that use the address you opened. Their texts are in
+`features.mjs`, and `/how-it-works` lists them all. The "Show features" switch in the corner hides
+them (your browser remembers it). Without JavaScript each bubble still opens, as a sheet at the bottom
+of the screen.
+
 | Path                | What it shows                                                                          |
 | ------------------- | -------------------------------------------------------------------------------------- |
 | `/`                 | Home: open now or not, this week's coffee, opening hours, the sign-up form; not cached |
 | `/menu`             | The menu as a page, cached for 5 minutes (`Cache-Control`)                             |
-| `/subscribe`        | The newsletter form. `POST` validates it and answers with a thank-you page             |
+| `/subscribe`        | The newsletter form. `POST` validates it and answers with a thank-you page or a 422    |
+| `/how-it-works`     | Every feature bubble in one list, with the steps to test it                            |
 | `/api`              | The list of JSON endpoints                                                             |
 | `/api/menu`         | The menu as JSON, cached for 5 minutes                                                 |
 | `/api/hours`        | Opening hours and whether the shop is open now, as JSON; not cached                    |
-| anything else       | A 404 page (or JSON under `/api/`)                                                     |
+| anything else       | A 404 page (or JSON under `/api/`); a known path with another method gets a 405        |
 | `jobs/tomorrow.mjs` | A scheduled job that logs tomorrow's opening hours every evening                       |
 
 Send the form with `Accept: application/json` and it answers with JSON instead of a page:
@@ -31,7 +38,9 @@ curl -X POST https://<your-app>/subscribe -H 'accept: application/json' -d 'emai
 - `data.mjs`: the settings, the menu and the opening hours.
 - `clock.mjs`: "are we open?" in the shop's time zone.
 - `pages.mjs`: the HTML templates. Anything a visitor types is escaped.
-- `assets/`: the stylesheet, the favicon and the dithered image in the hero.
+- `features.mjs`: the texts of the feature bubbles and of `/how-it-works`.
+- `assets/`: the stylesheet, the favicon, the dithered coffee bag in the hero and `hints.js`, the
+  small script that opens the bubbles.
 - `jobs/tomorrow.mjs`: the scheduled job.
 
 ## Environment variables
