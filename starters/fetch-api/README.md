@@ -8,7 +8,7 @@ The home page works out whether the shop is open from the opening hours and the 
 shop's time zone, on every request. The menu page and `/api/menu` read the same data, so the page and
 the API never disagree.
 
-The yellow **?** bubbles on the pages point at the things the server does: what happens at that spot
+The small **?** bubbles on the pages point at the things the server does: what happens at that spot
 and how to try it yourself, with `curl` commands that use the address you opened. Their texts are in
 `features.mjs`, and `/how-it-works` lists them all. The "Show features" switch in the corner hides
 them (your browser remembers it). Without JavaScript each bubble still opens, as a sheet at the bottom
@@ -39,7 +39,7 @@ curl -X POST https://<your-app>/subscribe -H 'accept: application/json' -d 'emai
 - `clock.mjs`: "are we open?" in the shop's time zone.
 - `pages.mjs`: the HTML templates. Anything a visitor types is escaped.
 - `features.mjs`: the texts of the feature bubbles and of `/how-it-works`.
-- `assets/`: the stylesheet, the favicon, the dithered coffee bag in the hero and `hints.js`, the
+- `assets/`: the stylesheet, the favicon, the dithered sunrise in the hero and `hints.js`, the
   small script that opens the bubbles.
 - `jobs/tomorrow.mjs`: the scheduled job.
 

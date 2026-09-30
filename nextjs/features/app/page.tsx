@@ -16,9 +16,9 @@ export default function Home() {
         <Dither className="dither-hero" />
         <div className="hero-content">
           <p className="hero-tags">
-            <span className="pill pill-heat">Sat 14 Nov 2026</span>
-            <span className="pill pill-glass">{event.city}</span>
-            <span className="pill pill-glass">One day, one track</span>
+            <span className="pill">Sat 14 Nov 2026</span>
+            <span className="pill">{event.city}</span>
+            <span className="pill">One day, one track</span>
           </p>
           <h1 className="hero-title">
             {event.name}
@@ -29,10 +29,10 @@ export default function Home() {
             old tram depot in {event.city}.
           </p>
           <div className="actions">
-            <Link href="/schedule" className="btn btn-heat">
+            <Link href="/schedule" className="btn">
               See the schedule
             </Link>
-            <Link href="/guestbook" className="btn btn-glass">
+            <Link href="/guestbook" className="btn btn-line">
               Sign the attendee wall
             </Link>
           </div>

@@ -6,7 +6,7 @@ import { FeatureHint } from "./FeatureHint";
 export function Notice({ title, hint, children }: { title: string; hint?: HintId; children: ReactNode }) {
   return (
     <div className="notice" role="status">
-      <span className="pill pill-warn">Not set up yet</span>
+      <span className="label">Not set up yet</span>
       <h2>
         {title}
         {hint ? <FeatureHint id={hint} /> : null}

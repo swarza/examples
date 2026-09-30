@@ -59,7 +59,7 @@ async function Files({ stored, ms }: { stored?: string; ms?: string }) {
             <input type="file" name="file" required />
           </label>
           <span className="form-submit">
-            <button type="submit" className="btn btn-heat">
+            <button type="submit" className="btn">
               Upload
             </button>
             <FeatureHint id="storage" />

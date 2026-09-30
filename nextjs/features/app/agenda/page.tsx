@@ -52,7 +52,7 @@ export default async function Agenda() {
               <input type="hidden" name="slug" value={t.slug} />
               <button
                 type="submit"
-                className={on ? "btn btn-heat btn-small" : "btn btn-line btn-small"}
+                className={on ? "btn btn-small" : "btn btn-line btn-small"}
                 aria-pressed={on}
                 aria-label={`${on ? "Remove" : "Add"} ${t.title}`}
               >

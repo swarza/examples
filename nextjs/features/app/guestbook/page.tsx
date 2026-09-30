@@ -93,7 +93,7 @@ async function Wall() {
             <input name="message" required maxLength={500} placeholder="How to cache without fear" />
           </label>
           <span className="form-submit">
-            <button type="submit" className="btn btn-heat">
+            <button type="submit" className="btn">
               Sign the wall
             </button>
             <FeatureHint id="wall" />

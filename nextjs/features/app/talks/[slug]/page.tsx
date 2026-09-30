@@ -48,7 +48,7 @@ export default async function Talk({ params }: { params: Promise<{ slug: string 
           ))}
           <form action={add} className="actions">
             <input type="hidden" name="slug" value={talk.slug} />
-            <button type="submit" className="btn btn-heat">
+            <button type="submit" className="btn">
               Add to my agenda
             </button>
             <FeatureHint id="agenda-add" />

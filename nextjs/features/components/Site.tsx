@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { event } from "@/lib/program";
-import { Dither } from "./Dither";
 import { FeatureHint } from "./FeatureHint";
 import { HintsToggle } from "./HintsToggle";
 import { NavLinks } from "./NavLinks";
@@ -15,21 +14,11 @@ const sections = [
   { href: "/under-the-hood", label: "Under the hood" },
 ];
 
-/** The event's mark: a 3x3 block of pixels in the dither colours, next to the name. */
 export function Logo() {
   return (
     <Link href="/" className="logo" aria-label={`${event.name} ${event.edition}, home`}>
-      <svg className="logo-mark" viewBox="0 0 3 3" width="24" height="24" aria-hidden="true">
-        <rect x="0" y="0" width="1" height="1" fill="#6a35ff" />
-        <rect x="2" y="0" width="1" height="1" fill="#ff2fcf" />
-        <rect x="1" y="1" width="1" height="1" fill="#ff2fcf" />
-        <rect x="0" y="2" width="1" height="1" fill="#ff5a1a" />
-        <rect x="2" y="2" width="1" height="1" fill="#ffd54a" />
-      </svg>
-      <span>
-        {event.name}
-        <span className="logo-ed">{event.edition}</span>
-      </span>
+      {event.name}
+      <span className="logo-ed">{event.edition}</span>
     </Link>
   );
 }
@@ -108,7 +97,6 @@ export function Footer() {
         <span>Hosted on swarza</span>
         <span>Next.js with @swarza/next</span>
       </div>
-      <Dither className="dither-strip" />
     </footer>
   );
 }
