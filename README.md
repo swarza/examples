@@ -1,8 +1,6 @@
-<p align="center">
-  <img src=".github/banner.png" alt="swarza examples" width="100%" />
-</p>
-
 # swarza examples
+
+![swarza examples](.github/banner.png)
 
 Apps you can copy and deploy to [swarza](https://stg.swarza.com), from a single HTML page to a news
 site with a database, file storage and scheduled jobs. Each folder is a complete project with a
