@@ -1,0 +1,8 @@
+{
+  "scheduledJobs": [
+    {
+      "schedule": "*/5 * * * *",
+      "function": "jobs/heartbeat.ts"
+    }
+  ]
+}

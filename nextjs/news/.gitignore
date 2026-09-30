@@ -1,0 +1,6 @@
+.next/
+.swarza/
+next-env.d.ts
+node_modules/
+.local-dev/
+public/dev-covers/

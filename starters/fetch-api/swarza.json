@@ -1,0 +1,12 @@
+{
+  "runtime": {
+    "engine": "node",
+    "entry": "index.mjs"
+  },
+  "scheduledJobs": [
+    {
+      "schedule": "*/10 * * * *",
+      "function": "jobs/heartbeat.mjs"
+    }
+  ]
+}

@@ -1,0 +1,1289 @@
+/* Dispatch: black and white, type first.
+   System: an 8px spacing scale, one gutter and max width, a 12-column grid, a small type scale,
+   one section head, one story anatomy (cover 16, kicker 8, headline 8, byline), two image shapes
+   (3:2 and 2:1), ink rules between modules and faint rules between items. */
+:root {
+  --paper: #ffffff;
+  --ink: #0b0b0b;
+  --muted: #5e5e5e;
+  --faint: #dedede;
+  --tile: #f0f0f0;
+  --serif: var(--font-serif), Georgia, "Times New Roman", serif;
+  --sans: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: var(--font-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Spacing */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 48px;
+  --s6: 64px;
+  --s7: 96px;
+
+  /* Layout: the main column spans 9 of 12 (8 below 1200px), the side column the rest. */
+  --gutter: var(--s3);
+  --max: 1280px;
+  --module: var(--s6);
+  --main: 8;
+
+  /* Type */
+  --t-meta: 12px; /* kickers, labels */
+  --t-small: 14px; /* bylines, navigation */
+  --t-body: 16px;
+  --t-list: 18px; /* numbered lists */
+  --t-title: 20px; /* card headlines, section heads, standfirsts */
+  --t-river: 24px; /* river headlines, subheads */
+  --t-num: 28px; /* list numerals */
+  --t-display: 56px; /* the lead and page headlines */
+  --wordmark: 64px;
+
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0b0b0b;
+    --ink: #f4f4f4;
+    --muted: #a3a3a3;
+    --faint: #2a2a2a;
+    --tile: #161616;
+    color-scheme: dark;
+  }
+}
+@media (min-width: 1200px) {
+  :root {
+    --main: 9;
+    --t-display: 64px;
+  }
+}
+@media (max-width: 900px) {
+  :root {
+    --module: var(--s5);
+    --t-display: 48px;
+  }
+}
+@media (max-width: 600px) {
+  :root {
+    --gutter: var(--s2);
+    --t-river: 20px;
+    --t-display: 36px;
+    --wordmark: 40px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--t-body) / 1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+.title a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 400;
+  text-wrap: balance;
+}
+p {
+  margin: 0;
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* ── Masthead ─────────────────────────────────────────── */
+.mast-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-block: var(--s4) var(--s3);
+}
+.logo {
+  font: 400 var(--wordmark) / 1 var(--serif);
+  letter-spacing: -0.04em;
+}
+.logo em {
+  font-style: italic;
+}
+.mast-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s1);
+  font-size: var(--t-small);
+}
+.mast-date {
+  font: var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.mast-links {
+  display: flex;
+  gap: var(--s3);
+}
+.mast-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+/* Scrolls sideways only: no vertical overflow, and a swipe that reaches the end stops there
+   (a vertical swipe on it still scrolls the page). */
+.nav {
+  display: flex;
+  gap: var(--s3);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  border-block: 1px solid var(--ink);
+  font-size: var(--t-small);
+  font-weight: 500;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar {
+  display: none;
+}
+/* The current tab's line is drawn inside the link and meets the nav's own rule: 2px in all. */
+.nav a {
+  flex: none;
+  padding-block: 13px;
+  line-height: 22px;
+  white-space: nowrap;
+}
+.nav a:hover {
+  box-shadow: inset 0 -1px 0 var(--faint);
+}
+.nav a[aria-current="page"] {
+  box-shadow: inset 0 -1px 0 var(--ink);
+  /* The serif sits higher in the same line box; shift it down to share the sans baseline. */
+  padding-block: 15px 11px;
+  font: italic 400 17px / 22px var(--serif);
+}
+
+/* ── Preview strip ────────────────────────────────────── */
+/* Fixed over the masthead's top margin, so nothing below it moves. */
+.preview-bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  height: var(--s3);
+  background: var(--ink);
+  color: var(--paper);
+  font: var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.preview-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  height: 100%;
+}
+.preview-bar-inner span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.preview-bar a {
+  flex: none;
+  padding-block: 10px;
+  margin-block: -10px;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ── Shared pieces ────────────────────────────────────── */
+.kicker {
+  align-self: flex-start;
+  font: 500 var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.kicker:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.byline {
+  font-size: var(--t-small);
+  line-height: 20px;
+  color: var(--muted);
+}
+.byline a {
+  color: var(--ink);
+}
+.byline a:hover {
+  text-decoration: underline;
+}
+.dek {
+  color: var(--muted);
+  font-size: var(--t-body);
+  line-height: 1.5;
+}
+.cover {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  background: var(--tile);
+}
+.cover-wide {
+  aspect-ratio: 2 / 1;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+.cover-blank {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font: 400 clamp(64px, 12vw, 160px) / 1 var(--serif);
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--ink);
+}
+.section-head h2 {
+  font: 600 var(--t-title) / 1.2 var(--sans);
+  letter-spacing: -0.01em;
+}
+.section-more {
+  flex: none;
+  font: var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.section-more .count {
+  color: var(--muted);
+}
+.section-head a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ── Story anatomy ────────────────────────────────────── */
+.card {
+  --gap: var(--s1);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+.card .body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.title {
+  font: 500 var(--t-title) / 1.25 var(--serif);
+  letter-spacing: -0.01em;
+}
+.card-lead {
+  --gap: var(--s2);
+}
+.card-lead .title {
+  font: 400 var(--t-display) / 1.05 var(--serif);
+  letter-spacing: -0.03em;
+}
+.card-lead .dek {
+  font-size: var(--t-title);
+  line-height: 1.4;
+  max-width: 60ch;
+}
+.card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  column-gap: var(--s3);
+  align-items: start;
+}
+.card-row .media {
+  grid-column: 2;
+  grid-row: 1;
+}
+.card-row .body {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--module);
+  padding-block: var(--s5) var(--module);
+}
+.split {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--s3);
+  row-gap: var(--module);
+}
+.split > .main {
+  grid-column: span var(--main);
+}
+.split > .side {
+  grid-column: span calc(12 - var(--main));
+}
+/* Lists that sit on the main column without a side column next to them. */
+.narrow {
+  max-width: calc((100% + var(--s3)) * var(--main) / 12 - var(--s3));
+}
+.sticky {
+  position: sticky;
+  top: var(--s3);
+  align-self: start;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s5) var(--s3);
+}
+.cards.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Section layouts: a big card (8 columns) beside two stacked cards (4); c puts the big card on
+   the right. The stack spreads so its last byline ends on the big card's last line. */
+.pattern {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--s3);
+}
+.pattern > .card {
+  grid-row: 1;
+  grid-column: 1 / span 8;
+}
+.pattern-stack {
+  grid-row: 1;
+  grid-column: 9 / span 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.pattern-c > .card {
+  grid-column: 5 / span 8;
+}
+.pattern-c > .pattern-stack {
+  grid-column: 1 / span 4;
+}
+/* Below 1200px a taller big card keeps its bottom level with the stack beside it. */
+@media (max-width: 1199px) {
+  .card-big .cover {
+    aspect-ratio: 4 / 3;
+  }
+}
+.card-big .title {
+  font-size: var(--t-num);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Black panels and bands: the same tokens, turned around. */
+.inverse {
+  --paper: #0b0b0b;
+  --ink: #f4f4f4;
+  --muted: #a3a3a3;
+  --faint: #333333;
+  --tile: #161616;
+  background: var(--paper);
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  .inverse {
+    --paper: #1a1a1a;
+    --faint: #3a3a3a;
+  }
+}
+/* Most read: its heading lines up with Latest's; the panel replaces the rule above it. */
+.panel {
+  padding: var(--s2) var(--s3) var(--s3);
+}
+.panel .section-head {
+  padding-top: 1px;
+  border-top: 0;
+}
+/* A full-width band; its content stays on the page grid. */
+.band {
+  padding-block: var(--s5);
+  box-shadow: 0 0 0 100vmax var(--paper);
+  clip-path: inset(0 -100vmax);
+}
+.band .cover {
+  outline: 1px solid #4a4a4a;
+  outline-offset: -1px;
+}
+@media (prefers-color-scheme: dark) {
+  .band .cover {
+    outline-color: #555555;
+  }
+}
+
+/* Rows in two columns on wide screens, so a list fills the grid instead of 9 of 12 columns. */
+@media (min-width: 1200px) {
+  .river.two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s3);
+    max-width: none;
+  }
+  .river.two > .card-row {
+    grid-template-columns: minmax(0, 1fr) 192px;
+  }
+  .river.two > .card-row:nth-child(2) {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .river.two > .card-row:nth-last-child(-n + 2) {
+    padding-bottom: 0;
+  }
+}
+/* Between phone and wide screens a list is one column across the whole page. */
+@media (min-width: 901px) and (max-width: 1199px) {
+  .river.two {
+    max-width: none;
+  }
+}
+/* Black bands next to each other join into one, divided by the second one's section rule. */
+.band + .band {
+  margin-top: calc(-1 * var(--module));
+  padding-top: calc(var(--module) - var(--s5));
+  /* Reach 1px up over the band above, so no seam shows where they meet. */
+  clip-path: inset(-1px -100vmax 0);
+}
+.band + .band.lead-module {
+  padding-top: var(--s5);
+  border-top: 1px solid var(--ink);
+}
+
+/* Mirrored split: the side column on the left. */
+@media (min-width: 901px) {
+  .split-left > .side {
+    grid-column: 1 / span calc(12 - var(--main));
+    grid-row: 1;
+  }
+  .split-left > .main {
+    grid-column: span var(--main) / -1;
+    grid-row: 1;
+  }
+}
+/* The lead across the page, Top stories in three columns under it. */
+.lead-wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.lead-wide .card-lead .body {
+  max-width: calc((100% + var(--s3)) * var(--main) / 12 - var(--s3));
+}
+.ranked-row ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3);
+}
+.ranked-row li,
+.ranked-row li:first-child,
+.ranked-row li:last-child {
+  padding-block: var(--s2) 0;
+  border-top: 1px solid var(--faint);
+}
+.ranked-row li:nth-child(-n + 3) {
+  padding-top: 0;
+  border-top: 0;
+}
+/* A black panel on a black band keeps its edge. */
+.inverse .inverse {
+  outline: 1px solid var(--faint);
+  outline-offset: -1px;
+}
+
+/* Numbered lists */
+.ranked ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: rank;
+}
+.ranked li {
+  counter-increment: rank;
+  display: grid;
+  grid-template-columns: var(--s4) minmax(0, 1fr);
+  column-gap: var(--s2);
+  padding-block: var(--s2);
+  border-top: 1px solid var(--faint);
+}
+.ranked li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.ranked li:last-child {
+  padding-bottom: 0;
+}
+.ranked li::before {
+  content: counter(rank);
+  font: 400 var(--t-num) / 1 var(--serif);
+}
+.ranked .body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+.ranked .title {
+  font-size: var(--t-list);
+  line-height: 24px;
+  text-wrap: pretty;
+}
+/* Most read: each story ends in a bar, its reads as a share of the top story's. */
+.ranked-reads .bar {
+  display: block;
+  height: 2px;
+  background: var(--faint);
+}
+.ranked-reads li {
+  border-top: 0;
+}
+.ranked-reads .bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
+/* The river of rows */
+.river {
+  display: flex;
+  flex-direction: column;
+}
+.river .card-row {
+  padding-block: var(--s3);
+  border-top: 1px solid var(--faint);
+}
+.river .card-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.river .card-row:last-child {
+  padding-bottom: 0;
+}
+.river .card-row .title {
+  font-size: var(--t-river);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* ── Inner pages ──────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  padding-block: var(--s5) var(--module);
+}
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.page-head h1 {
+  font: 400 var(--t-display) / 1.05 var(--serif);
+  letter-spacing: -0.03em;
+}
+.page-head .dek {
+  font-size: var(--t-title);
+  line-height: 1.4;
+  max-width: 60ch;
+}
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--faint);
+  font: var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pager a {
+  padding-block: 14px;
+  margin-block: -14px;
+}
+.pager a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.result-count {
+  color: var(--muted);
+  font-size: var(--t-small);
+}
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s5) var(--s3);
+}
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--ink);
+}
+.fact h2 {
+  font: 500 var(--t-river) / 1.2 var(--serif);
+  letter-spacing: -0.02em;
+}
+.fact p {
+  color: var(--muted);
+}
+.note-line {
+  max-width: 60ch;
+  color: var(--muted);
+}
+.note-line a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ── Article ──────────────────────────────────────────── */
+/* Head, prose and related stories share the 12-column grid: meta 1–3, text 4–10. */
+.article {
+  padding-block: var(--s5) var(--module);
+}
+.article-head,
+.article-body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--s3);
+}
+.article-head {
+  row-gap: var(--s2);
+  margin-bottom: var(--s5);
+}
+.article-head > * {
+  grid-column: 4 / span 7;
+}
+.article-head .kicker {
+  justify-self: start;
+}
+.article-head h1 {
+  font: 400 var(--t-display) / 1.05 var(--serif);
+  letter-spacing: -0.03em;
+}
+.article-head .dek {
+  font-size: var(--t-title);
+  line-height: 1.4;
+  max-width: 60ch;
+}
+.article-body {
+  margin-top: var(--s5);
+}
+.article-meta {
+  grid-column: 1 / span 3;
+  align-self: start;
+  position: sticky;
+  top: var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin: 0;
+  font-size: var(--t-small);
+  line-height: 20px;
+}
+.article-meta > div {
+  padding-top: var(--s1);
+  border-top: 1px solid var(--faint);
+}
+.article-meta dt {
+  font: var(--t-meta) / 16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.article-meta dd {
+  margin: var(--s1) 0 0;
+}
+.article-meta > div:first-child dd {
+  font: 500 var(--t-title) / 1.25 var(--serif);
+}
+.article-meta a:hover {
+  text-decoration: underline;
+}
+.prose {
+  grid-column: 4 / span 7;
+  max-width: 680px;
+  font: var(--t-title) / 1.6 var(--serif);
+}
+.prose > * {
+  margin-block: 0;
+}
+.prose > * + * {
+  margin-top: var(--s3);
+}
+.prose h2 {
+  margin-top: var(--s5);
+  font: 500 var(--t-river) / 1.2 var(--serif);
+  letter-spacing: -0.02em;
+}
+.prose h2 + * {
+  margin-top: var(--s2);
+}
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: var(--s3);
+  border-left: 1px solid var(--ink);
+  font-size: var(--t-river);
+  line-height: 1.3;
+  font-style: italic;
+}
+.prose ul,
+.prose ol {
+  padding-left: var(--s3);
+}
+.prose li + li {
+  margin-top: var(--s1);
+}
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.related {
+  margin-top: var(--s7);
+}
+
+/* ── Forms ────────────────────────────────────────────── */
+.form {
+  display: grid;
+  gap: var(--s3);
+  max-width: 640px;
+}
+.form label {
+  display: grid;
+  gap: var(--s1);
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+.form input,
+.form textarea,
+.form select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px var(--s2);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 var(--t-body) / 1.5 var(--sans);
+}
+.form.wide {
+  max-width: 1100px;
+}
+.form textarea {
+  min-height: 192px;
+  resize: vertical;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s1);
+  min-height: 48px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 var(--t-body) / 1 var(--sans);
+  cursor: pointer;
+}
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.button.ghost {
+  background: transparent;
+  color: var(--ink);
+}
+.note {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--ink);
+  font-size: var(--t-body);
+}
+.note.bad {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ── Footer ───────────────────────────────────────────── */
+.footer {
+  padding-bottom: var(--s6);
+}
+.footer-inner {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--s3);
+  row-gap: var(--s4);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--ink);
+}
+.footer-brand {
+  grid-column: span 6;
+}
+.footer-inner > ul {
+  grid-column: span 3;
+}
+.footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: var(--t-small);
+}
+.footer ul a {
+  display: block;
+  padding-block: var(--s1);
+}
+.footer ul a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.footer .logo {
+  font-size: 40px;
+}
+.footer p {
+  color: var(--muted);
+  font-size: var(--t-small);
+  max-width: 48ch;
+  margin-top: var(--s2);
+}
+
+/* ── Admin ────────────────────────────────────────────── */
+.admin {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 16px;
+  border-right: 1px solid var(--ink);
+}
+.admin-nav .logo {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+.admin-nav a {
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.admin-nav a:hover,
+.admin-nav a[aria-current="page"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.admin-main {
+  padding: 32px var(--gutter) 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.admin-main h1 {
+  font: 400 2.75rem/1 var(--serif);
+  letter-spacing: -0.03em;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th {
+  text-align: left;
+  font: 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ink);
+}
+.table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--faint);
+  vertical-align: top;
+}
+.pill {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 1px solid var(--ink);
+  font: 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pill.solid {
+  background: var(--ink);
+  color: var(--paper);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--ink);
+}
+.stats div {
+  padding: 18px;
+  border-right: 1px solid var(--ink);
+}
+.stats div:last-child {
+  border-right: 0;
+}
+.stats strong {
+  display: block;
+  font: 400 2.5rem/1 var(--serif);
+}
+.stats span {
+  font: 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 32px;
+  align-items: start;
+}
+.editor-grid .form {
+  max-width: none;
+}
+.checks {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.checks label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.checks input {
+  width: auto;
+}
+.tabs {
+  display: flex;
+  gap: 18px;
+  font: 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tabs a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* ── Narrow screens ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .split > .main,
+  .split > .side {
+    grid-column: auto;
+  }
+  .narrow {
+    max-width: none;
+  }
+  .sticky {
+    position: static;
+  }
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pattern {
+    row-gap: var(--s5);
+  }
+  .ranked-row ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ranked-row li:nth-child(3) {
+    padding-top: var(--s2);
+    border-top: 1px solid var(--faint);
+  }
+  .pattern > .card,
+  .pattern-c > .card,
+  .pattern-stack,
+  .pattern-c > .pattern-stack {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .pattern-stack {
+    flex-direction: row;
+    gap: var(--s3);
+  }
+  .pattern-stack > .card {
+    flex: 1;
+    min-width: 0;
+  }
+  /* The last tab fades out to show the row scrolls; the end padding lets it scroll clear. */
+  .nav {
+    padding-right: var(--s4);
+    mask-image: linear-gradient(90deg, #000 calc(100% - var(--s4)), transparent);
+  }
+  .article-head > *,
+  .prose {
+    grid-column: 1 / -1;
+  }
+  /* The meta rail becomes one line: By Mara Lindqvist · 29 September 2026 · 1 min read */
+  .article-meta {
+    grid-column: 1 / -1;
+    position: static;
+    display: block;
+    margin-bottom: var(--s4);
+    padding-top: var(--s1);
+    border-top: 1px solid var(--faint);
+    color: var(--muted);
+  }
+  .article-meta > div,
+  .article-meta dd {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .article-meta dd,
+  .article-meta > div:first-child dd {
+    color: var(--ink);
+    font: inherit;
+  }
+  .article-meta dt {
+    display: none;
+  }
+  .article-meta > div:first-child dt {
+    display: inline;
+    margin-right: 0.25em;
+    font: inherit;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .article-meta > div + div::before {
+    content: " · ";
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  .footer-inner > ul {
+    grid-column: span 6;
+  }
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stats div:nth-child(2) {
+    border-right: 0;
+  }
+  .stats div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--ink);
+  }
+}
+@media (max-width: 600px) {
+  .mast-top {
+    padding-block: var(--s3) var(--s2);
+    align-items: center;
+  }
+  .mast-date,
+  .mast-links .mast-more {
+    display: none;
+  }
+  .mast-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /* Touch targets of at least 44px, without moving anything. */
+  .kicker,
+  .section-head a {
+    padding-block: 14px;
+    margin-block: -14px;
+  }
+  .byline a {
+    padding-block: 14px;
+  }
+  .footer ul a {
+    padding-block: 12px;
+  }
+  .footer .logo {
+    display: inline-block;
+    padding-block: 2px;
+  }
+  .cards,
+  .cards.three,
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .cards {
+    gap: var(--s4);
+  }
+  .cards.compact {
+    gap: 0;
+  }
+  .card-row,
+  .compact .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    column-gap: var(--s2);
+    align-items: start;
+    padding-block: var(--s2);
+    border-top: 1px solid var(--faint);
+  }
+  .compact .card:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  /* The section layouts fold into the same list of rows. */
+  .pattern,
+  .pattern-stack {
+    display: block;
+  }
+  .pattern-stack .card:first-child {
+    padding-top: var(--s2);
+    border-top: 1px solid var(--faint);
+  }
+  .compact .card .cover {
+    aspect-ratio: 3 / 2;
+  }
+  .compact .card .dek {
+    display: none;
+  }
+  .card-big .title {
+    font-size: var(--t-title);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .panel {
+    padding: var(--s2);
+  }
+  /* On phones the strip sits at the bottom, with room of its own under the footer. */
+  .preview-bar {
+    inset: auto 0 0;
+    height: 44px;
+  }
+  .preview-bar-inner span {
+    white-space: normal;
+    line-height: 16px;
+  }
+  .preview-bar a {
+    padding-block: 0;
+    margin-block: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  body:has(.preview-bar) {
+    padding-bottom: 44px;
+  }
+  .ranked-row ol {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .ranked-row li,
+  .ranked-row li:nth-child(-n + 3) {
+    padding-block: var(--s2);
+    border-top: 1px solid var(--faint);
+  }
+  .ranked-row li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .ranked-row li:last-child {
+    padding-bottom: 0;
+  }
+  .compact .card .media,
+  .card-row .media {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .compact .card .body,
+  .card-row .body {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .river .card-row {
+    padding-block: var(--s2);
+  }
+  .card-row .title,
+  .river .card-row .title {
+    font-size: var(--t-title);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .card-row .dek {
+    display: none;
+  }
+  .prose {
+    font-size: var(--t-list);
+  }
+  .footer-inner > ul {
+    grid-column: span 6;
+  }
+  .admin {
+    grid-template-columns: 1fr;
+  }
+  .admin-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  .admin-nav .logo {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+.nobr {
+  white-space: nowrap;
+}

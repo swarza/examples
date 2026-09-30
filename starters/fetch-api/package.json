@@ -1,0 +1,8 @@
+{
+  "name": "fetch-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "swarza deploy --prod"
+  }
+}

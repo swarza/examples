@@ -1,0 +1,12 @@
+{
+  "scheduledJobs": [
+    {
+      "schedule": "* * * * *",
+      "function": "jobs/publish.ts"
+    },
+    {
+      "schedule": "7 * * * *",
+      "function": "jobs/most-read.ts"
+    }
+  ]
+}
