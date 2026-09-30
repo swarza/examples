@@ -57,13 +57,13 @@ The commands use `https://stg.swarza.com`. If you were given another address, us
    `MEDIA_PUBLIC_URL`.
 6. **Set the variables** on the application's Environment tab:
 
-   | Name                | Value                                                                                        |
-   | ------------------- | -------------------------------------------------------------------------------------------- |
-   | `SESSION_SECRET`    | 32 or more random characters (`openssl rand -hex 32`)                                        |
-   | `ADMIN_EMAIL`       | The first editor's email                                                                     |
-   | `ADMIN_PASSWORD`    | Their password, 10 characters or more; used once, on the first sign-in                       |
-   | `SITE_URL`          | The application's address with `https://`, e.g. `https://news-yourname.sites.stg.swarza.com` |
-   | `REVALIDATE_SECRET` | 16 or more random characters, for the jobs to refresh the pages                              |
+   | Name                | Value                                                                                  |
+   | ------------------- | -------------------------------------------------------------------------------------- |
+   | `SESSION_SECRET`    | 32 or more random characters (`openssl rand -hex 32`)                                  |
+   | `ADMIN_EMAIL`       | The first editor's email                                                               |
+   | `ADMIN_PASSWORD`    | Their password, 10 characters or more; used once, on the first sign-in                 |
+   | `SITE_URL`          | The application's address with `https://`, e.g. `https://news-yourname.stg.swarza.app` |
+   | `REVALIDATE_SECRET` | 16 or more random characters, for the jobs to refresh the pages                        |
 
 7. **Deploy**:
 
